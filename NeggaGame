@@ -1,15 +1,17 @@
-UserInputService.InputBegan:Connect(function(Input, GPE)
-    if Input.KeyCode == Enum.KeyCode.LeftShift and Sp then
-        VG.IsA(Player.Character, "Humanoid").WalkSpeed = 25
-    end
-end)
-UserInputService.InputEnded:Connect(function(Input, GPE)
-    if Input.KeyCode == Enum.KeyCode.LeftShift and Sp then
-        VG.IsA(Player.Character, "Humanoid").WalkSpeed = 16
-    end
-end)
+local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game.Workspace
+local VG = game:GetService("VirtualUser")
 
-for i,v in next, getgc(true) do
+local AllPlayers = {}
+for i, v in next, Players:GetPlayers() do
+    table.insert(AllPlayers, v.Name)
+end
+
+local Emotes = {}
+for i, v in next, getgc(true) do
     if type(v) == "table" then
         if rawget(v, "Emotes") then
             Emotes = v.Emotes
@@ -17,17 +19,16 @@ for i,v in next, getgc(true) do
     end
 end
 local New = {}
-for i,v in next, Emotes do
+for i, v in next, Emotes do
     if not table.find(New, i) and not rawget(v, "Type") then
         table.insert(New, i)
     end
 end
 
-
 local GetRole = function(Role, True)
     local Target = nil
-    local Table = game:GetService("ReplicatedStorage").Remotes.Extras.GetPlayerData:InvokeServer()
-    for i,v in next, Table do
+    local Table = ReplicatedStorage:WaitForChild("Extras").GetPlayerData:InvokeServer()
+    for i, v in next, Table do
         if v.Role == Role and not True then
             Target = i
         elseif True and v.Role == "Innocent" and i == Player.Name then
@@ -36,12 +37,13 @@ local GetRole = function(Role, True)
     end
     return Target
 end
+
 local KillAll = function(v)
     if GetRole("Murderer", false) == Player.Name then
         if VG.GetTool("Knife") then
             VG.GetTool("Knife")
         elseif VG.FFD(Player.PlayerGui, "CashBag").Visible then
-            VG.Teleport(Vector3.new(0,90000000000,0))
+            VG.Teleport(Vector3.new(0, 90000000000, 0))
             Player.Character.Knife.Stab:FireServer("Slash")
             firetouchinterest(v.Character.HumanoidRootPart, Player.Character.Knife.Handle, 1)
             firetouchinterest(v.Character.HumanoidRootPart, Player.Character.Knife.Handle, 0)
@@ -53,22 +55,23 @@ local ShootMurderer = function(v)
     if (GetRole("Sheriff", false) == Player.Name or GetRole("Hero", false) == Player.Name) and VG.FFD(Player.PlayerGui, "CashBag").Visible then
         if GetRole("Murderer", false) == v.Name then
             VG.GetTool("Gun")
-            VG.Teleport(Player.Character:GetModelCFrame().Position + Vector3.new(0,0,5))
+            VG.Teleport(Player.Character:GetModelCFrame().Position + Vector3.new(0, 0, 5))
             Player.Character.Gun.KnifeServer.ShootGun:InvokeServer(1, VG.GetPosition(v.Character), "AH")
-            VG.Teleport(Vector3.new(0,500000,0))
+            VG.Teleport(Vector3.new(0, 500000, 0))
         end
     end
 end
+
 local CollectCoin = function()
     if GetRole("Innocent", true) == Player.Name then
-        local Map = VG.FFD(Workspace, "CoinContainer")
+        local Map = Workspace:FindFirstChild("CoinContainer")
         if Map then
             if VG.FFD(Player.PlayerGui, "CoinBags") and VG.FFD(Player.PlayerGui, "CoinBags").Visible then
                 for i, v in next, Map:GetChildren() do
                     if v.Name == "Coin_Server" then
                         VG.Teleport(v.Position)
                         wait(1)
-                        VG.Teleport(Vector3.new(0,500000,0))
+                        VG.Teleport(Vector3.new(0, 500000, 0))
                         wait(3)
                     end
                 end
@@ -89,10 +92,11 @@ end
 local Trap = function(CFrame)
     ReplicatedStorage.TrapSystem.PlaceTrap:InvokeServer(CFrame)
 end
+
 local Version = {}
 local Rules = {
-    ["Murderer"] = Color3.new(255,0,0),
-    ["Innocent"] = Color3.new(0,255,0),
+    ["Murderer"] = Color3.new(255, 0, 0),
+    ["Innocent"] = Color3.new(0, 255, 0),
     ["Hero"] = Color3.new(255, 255, 0),
     ["Sheriff"] = Color3.new(0, 0, 255),
 }
@@ -100,7 +104,7 @@ local Rules = {
 local Help = function(v)
     local H = Instance.new("Highlight")
     H.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    H.FillColor = Color3.new(0,255,0)
+    H.FillColor = Color3.new(0, 255, 0)
     Version[v] = H
     H.Parent = v.Character
     local function Help2(v)
@@ -132,11 +136,12 @@ local Update = function(v)
 end
 
 local Rules = {
-    ["Murderer"] = Color3.new(255,0,0),
-    ["Innocent"] = Color3.new(0,255,0),
+    ["Murderer"] = Color3.new(255, 0, 0),
+    ["Innocent"] = Color3.new(0, 255, 0),
     ["Hero"] = Color3.new(255, 255, 0),
     ["Sheriff"] = Color3.new(0, 0, 255),
 }
+
 spawn(function()
     while wait() do
         pcall(function()
@@ -161,11 +166,11 @@ end)
 spawn(function()
     while wait() do
         pcall(function()
-            if Num then 
+            if Num then
                 CollectCoin()
             end
             if Kill then
-                for i,v in next, Players:GetPlayers() do
+                for i, v in next, Players:GetPlayers() do
                     if v ~= Player then
                         KillAll(v)
                     end
@@ -175,10 +180,23 @@ spawn(function()
     end
 end)
 
+UserInputService.InputBegan:Connect(function(Input, GPE)
+    if Input.KeyCode == Enum.KeyCode.LeftShift and Sp then
+        VG.IsA(Player.Character, "Humanoid").WalkSpeed = 25
+    end
+end)
+UserInputService.InputEnded:Connect(function(Input, GPE)
+    if Input.KeyCode == Enum.KeyCode.LeftShift and Sp then
+        VG.IsA(Player.Character, "Humanoid").WalkSpeed = 16
+    end
+end)
+
 Stepped:Connect(function()
-    if Num then VG.NoClip() end
+    if Num then
+        VG.NoClip()
+    end
     if d2 then
-        for i,v in next, Players:GetPlayers() do
+        for i, v in next, Players:GetPlayers() do
             if v ~= Player then
                 ShootMurderer(v)
             end
@@ -198,6 +216,7 @@ Stepped:Connect(function()
         ForceTrade(Players[Person])
     end
 end)
+
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
@@ -280,8 +299,7 @@ do
         Trap1 = Options.Rough.Value
     end)
     Options.Rough:SetValue(false)
-   
-    local Toggle = Tabs.Main:AddToggle("You", {Title = "Auto Request Trade User", Default = false})
+     local Toggle = Tabs.Main:AddToggle("You", {Title = "Auto Request Trade User", Default = false})
     Toggle:OnChanged(function()
         Trap1 = Options.You.Value
     end)
@@ -356,9 +374,9 @@ SaveManager:BuildConfigSection(Tabs.Settings)
 Window:SelectTab(1)
 
 Fluent:Notify({
-    Title = "V.G Hub",
+    Title = " WaverHub⛅",
     Content = "The script has been loaded.",
     Duration = 8
 })
 
-SaveManager:LoadAutoloadConfig()
+SaveManager:LoadAutoloadConfig() 
